@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+        display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;  
+            scrollbar-width: none; 
+        }
+        * {
+            box-sizing: border-box;
+            
+        }
+        body {color: white;}
+
+        .true {background-color: #006c17;}
+        .false {background-color: #101010} 
+
+        #cros {text-decoration-line:none !important}
+    </style>
+</head>
+<body class="bg-zinc-800  flex flex-col max-w-md mx-auto min-h-screen items-center antialiased">
+    <div class="p-6 flex w-full flex-col min-h-screen items-center antialiased">
+         <div class="w-full max-w-md flex flex-col items-center gap-4">
+            <div id="totalNumber" class="bg-[#060606] w-full flex p-6 flex-col items-center rounded-[32px]">
+                <p>Виконано: 0 завдань</p>
+            </div>
+            <div class="bg-[#161616] w-full flex p-6 flex-col items-center rounded-[32px]">
+                <div id="historyList"  class="flex flex-col gap-4 w-full max-h-[75vh] overflow-y-auto no-scrollbar">
+
+                </div>
+            </div>
+           
+
+            <button id="openModalBtn" class="fixed bottom-6 right-6 bg-black z-10 py-4 px-6 rounded-full">+</button>
+        </div>
+    </div>
+     <div  id="modalWindow" class="hidden  max-w-md mx-auto bg-[#161616]/60 duration-[1s] w-[90%] h-screen w-full backdrop-blur-md transition-opacity flex  flex-col fixed z-20 gap-4 justify-end items-center">
+                <div class="transition-opacity h-[40vh] bg-[#161616]/80 flex w-[90%]  p-6 flex-col  mb-10 z-30 gap-4 items-center rounded-[32px]">
+                
+                    <div class="flex w-full justify-between items-center">
+                        <p class="ml-[28%] font-bold">Додати завдання</p>
+                        <button id="closeModalBtn" class="p-2">x</button>
+                    </div>
+                    <div class="flex flex-col gap-4 h-full w-full">
+                        <input id="taskText" type="text" class="w-[100%] h-[20%] pl-4 rounded-2xl">
+                        <div>
+                        
+                            <form id="form">
+                                <input type="radio" id="dterminovo" name="priority" value="ДУЖЕ ТЕРМІНОВО" checked>
+                                <label for="dterminovo">ДУЖЕ ТЕРМІНОВО</label><br>
+                                <input type="radio" id="terminovo" name="priority" value="Терміново">
+                                <label for="terminovo">Терміново</label><br>
+                                <input type="radio" id="nterminovo" name="priority" value="Не терміново">
+                                <label for="nterminovo">Не терміново</label>
+                            </form>
+                        </div>
+                        <button id="pushButton" class="py-4 px-8 bg-emerald-600 rounded-2xl">Прикріпити</button>
+                    </div>
+                </div>
+     </div>
+   
+    <script>
+        let historyTasks = JSON.parse(localStorage.getItem('tasks_data')) || [];
+        let i = 0;
+        historyLoad();
+        function historyLoad() {
+            
+            render();
+            itemsRefresh();
+        }
+        function render() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            historyTasks.forEach(item => {
+                const card = document.createElement("button");
+                card.className = `${item.completed || false} py-4 px-6 rounded-2xl flex justify-between items-center w-full text-left`;
+                
+                const textStyle = item.completed ? 'text-decoration-line: line-through;' : '';
+
+                card.innerHTML = `
+                    <div style="${textStyle}" class="flex flex-col">
+                        <span ">${item.nameOf}<br></span>
+                        <span class="text-xs opacity-60">Пріоритет: ${item.priority}</span>
+                    </div>
+                    <span class="delete-btn text-xl font-bold ml-4 p-1 hover:text-rose-500 transition-colors">✕</span>
+                `;
+
+                card.addEventListener('click', (event) => {
+                    if (event.target.classList.contains('delete-btn')) {
+                        historyTasks = historyTasks.filter(task => task !== item);
+                        
+                        saveData();
+                        render();
+                        itemsRefresh();
+                        return; 
+                    }
+
+                    console.log("Клікнули на саму картку! Змінюємо статус.");
+                    item.completed = !item.completed;
+                    
+                    saveData();
+                    itemsRefresh();
+                    render();
+                });
+
+                historyList.appendChild(card);
+            });
+        } 
+
+        function saveData() {
+            localStorage.setItem('tasks_data', JSON.stringify(historyTasks));
+        }
+
+        function itemsRefresh() {
+            
+            document.getElementById('totalNumber').innerText = (`Виконано: ${historyTasks.filter(item => item.completed).length} завдань`)
+        }
+        
+        document.getElementById("openModalBtn").addEventListener("click", () => {
+            document.getElementById("modalWindow").classList.remove("hidden")
+        })
+
+        document.getElementById("closeModalBtn").addEventListener("click", () => {
+            document.getElementById("modalWindow").classList.add("hidden")
+        })
+
+        document.getElementById("pushButton").addEventListener("click", () => {
+            const tasks = {
+                nameOf: document.getElementById('taskText').value,
+                priority: document.querySelector('input[name="priority"]:checked').value
+            }
+            
+            historyTasks.push(tasks);
+            saveData();
+            render();
+            console.log(historyTasks);
+        })
+
+        
+    
+
+    </script>
+    
+</body>
+</html>
